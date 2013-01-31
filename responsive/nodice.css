@@ -1,6 +1,9 @@
-body:before {
-	content: "No dice";
+.desktop {
 	font-family: 'Helvetica Neue', Helvetica, Arial, serif;
     font-size: xx-large;
     color: blue;
+}
+
+.mobile {
+	display: none;
 }
