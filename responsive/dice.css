@@ -1,6 +1,6 @@
 body:before {
 	content: "Dice";
 	font-family: 'Helvetica Neue', Helvetica, Arial, serif;
-    font-size: large;
+    font-size: xx-large;
     color: red;
 }
