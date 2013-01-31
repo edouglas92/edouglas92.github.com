@@ -28,6 +28,12 @@
 
 }
 
+.bg {
+	background-color: #87CEFA;
+	width: 640px;
+
+}
+
 #bio {
 	width: 400px;
 	font-size: large;
