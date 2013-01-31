@@ -1,0 +1,51 @@
+#link {
+	font-size: x-large;
+	font-family: Futura, serif;
+	font-style: oblique;
+	color: blue;
+	position: relative;
+    bottom: 0;
+    right: -150px;
+}
+
+.head {
+	font-size: xx-large;
+	font-family: Geneva, serif;
+	font-style: italic;
+	color: #FFCC00;
+	position: relative;
+    bottom: 0;
+    right: -150px;
+}
+
+#selfimg {
+	position: relative;
+    bottom: 0;
+    right: -125px;
+
+}
+
+.bg {
+	background-color: #996699;
+
+}
+
+#bio {
+	font-size: large;
+	font-family: Copperplate, serif;
+	font-style: normal;
+	color: #6699CC;
+	position: relative;
+    bottom: 0;
+    right: -50px;
+}
+
+.biohead {
+	font-size: xx-large;
+	font-family: Copperplate, serif;
+	font-style: italic;
+	color: #FFCC00;
+	position: relative;
+    bottom: 0;
+    right: -100px;
+}

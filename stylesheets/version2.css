@@ -1,0 +1,30 @@
+body {
+	font-size: 18px;
+	background-color: blue;
+	color: gray
+	font-family: 'Helvetica Neue', Helvetica, Arial, serif;
+}
+
+ul, pre, h1, h2 {
+	margin-left: 25%
+}
+
+.itunes {
+	background-color: green;
+}
+
+#content {
+	font-size: x-small;
+}
+
+.repeat {
+	border-bottom: black;
+	border-left: black;
+	border-right: black;
+	border-top: black;
+	border-width: 5px;
+	border-style: dashed;
+	font-size: 28px;
+}
+
+
