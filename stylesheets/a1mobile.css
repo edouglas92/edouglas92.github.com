@@ -5,7 +5,6 @@
 	color: red;
 	position: relative;
     bottom: 0;
-    right: -150px;
 }
 
 .head {
@@ -15,18 +14,17 @@
 	color: #FFCC00;
 	position: relative;
     bottom: 0;
-    right: -150px;
 }
 
 #selfimg {
 	position: relative;
     bottom: 0;
-    right: -125px;
 
 }
 
 .bg {
 	background-color: #87CEFA;
+	width: 400px;
 
 }
 
@@ -38,7 +36,6 @@
 	color: #CD853F;
 	position: relative;
     bottom: 0;
-    right: -50px;
     border-bottom: olive;
     border-left: silver;
     border-right: black;
@@ -54,7 +51,6 @@
 	color: #32CD32;
 	position: relative;
     bottom: 0;
-    right: -100px;
 }
 
 .resumehead {
