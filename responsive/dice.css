@@ -1,5 +1,6 @@
 body {
 	content: "Dice";
+	display: inline;
 	font-family: 'Helvetica Neue', Helvetica, Arial, serif;
     font-size: large;
     color: red;
