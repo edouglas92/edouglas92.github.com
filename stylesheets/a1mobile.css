@@ -50,7 +50,6 @@
 	font-family: Geneva, serif;
 	font-style: italic;
 	color: #32CD32;
-	position: relative;
     bottom: 0;
 }
 
@@ -59,7 +58,8 @@
 	font-family: Copperplate, serif;
 	font-style: italic;
 	color: #F0F8FF;
-	position: relative;
+	margin-top: 15px;
+	margin-bottom: 15px;
 }
 
 
@@ -68,5 +68,4 @@
 	font-family: "Gill Sans", serif;
 	font-style: normal;
 	color: black;
-	position: relative;
 }
