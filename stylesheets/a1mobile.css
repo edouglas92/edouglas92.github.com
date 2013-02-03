@@ -46,6 +46,7 @@
 }
 
 .biohead {
+	width: 300px;
 	font-size: xx-large;
 	font-family: Geneva, serif;
 	font-style: italic;
