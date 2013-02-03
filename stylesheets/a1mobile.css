@@ -24,13 +24,13 @@
 
 .bg {
 	background-color: #87CEFA;
-	width: 200px;
+	
 
 }
 
 
 #bio {
-	width: 400px;
+
 	font-size: large;
 	font-family: Copperplate, serif;
 	font-style: normal;
@@ -46,7 +46,7 @@
 }
 
 .biohead {
-	width: 300px;
+	
 	font-size: xx-large;
 	font-family: Geneva, serif;
 	font-style: italic;
