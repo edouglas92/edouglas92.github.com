@@ -72,5 +72,9 @@
 	font-family: "Gill Sans", serif;
 	font-style: normal;
 	color: black;
-	width: 450px;
+	width: 500px;
+}
+
+ul {
+	margin-bottom: 10px;
 }
