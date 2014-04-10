@@ -37,7 +37,9 @@ game.specs = {
 	outlineBuffer: 2,
 	warnCount: game.capacities.terminal*0.20,
 	maxWarnOpac: 0.5,
-	warnOpacStep: 0.0175
+	warnOpacStep: 0.0175,
+	arrowXDis: 65,
+	arrowYDis: 25
 };
 
 game.colors = {
@@ -120,7 +122,8 @@ game.clickSecHub = function(hub){
 				$.each(game.primaryHubs, function(idx, pHub){
 					if (!pHub.connected && pHub.selected && !hub.isFull) {
 						if (!hub.pOneFull && ((pHub.colour == hub.primOne) ||
-							((hub.primOne == game.colors.secondaryDefault)))) {
+							(hub.primOne == game.colors.secondaryDefault)) && 
+							!hub.primOneConnected && (pHub.colour != hub.primTwo)) {
 							hub.primOneConnected = true;
 							hub.primOneConnection = pHub;
 							pHub.connected = true;
@@ -133,7 +136,8 @@ game.clickSecHub = function(hub){
 							hub.colour = game.calcSecondaryColor(hub);
 							hub.colouring = game.calcSecondaryColor(hub);
 						} else if (!hub.pTwoFull && ((pHub.colour == hub.primTwo) ||
-							((hub.primTwo == game.colors.secondaryDefault)))) {
+							(hub.primTwo == game.colors.secondaryDefault)) && 
+							!hub.primTwoConnected && (pHub.colour != hub.primOne)) {
 							hub.primTwoConnected = true;
 							hub.primTwoConnection = pHub;
 							pHub.connected = true;
@@ -148,7 +152,8 @@ game.clickSecHub = function(hub){
 						}
 					} else if (pHub.connected && !pHub.connected2 && pHub.selected && !hub.isFull && (pHub.connection != hub )) {
 						if (!hub.pOneFull && ((pHub.colour == hub.primOne) ||
-							((hub.primOne == game.colors.secondaryDefault)))) {
+							(hub.primOne == game.colors.secondaryDefault)) && 
+							!hub.primOneConnected && (pHub.colour != hub.primTwo)) {
 							hub.primOneConnected = true;
 							hub.primOneConnection = pHub;
 							pHub.connected2 = true;
@@ -161,7 +166,8 @@ game.clickSecHub = function(hub){
 							hub.colour = game.calcSecondaryColor(hub);
 							hub.colouring = game.calcSecondaryColor(hub);
 						} else if (!hub.pTwoFull && ((pHub.colour == hub.primTwo) ||
-							((hub.primTwo == game.colors.secondaryDefault)))) {
+							(hub.primTwo == game.colors.secondaryDefault)) && 
+							!hub.primTwoConnected && (pHub.colour != hub.primOne)) {
 							hub.primTwoConnected = true;
 							hub.primTwoConnection = pHub;
 							pHub.connected2 = true;
@@ -312,8 +318,8 @@ game.initializeHub = function(xcoord, ycoord, cap, rad, clr, sClr, num, name){
   		strokeWidth: game.specs.minConnectWidth,
   		visible: false,
   		rounded: true,
-  		startArrow: false,
-  		arrowRadius: 1,
+  		endArrow: true,
+  		arrowRadius: 0,
   		x1: hub.xpos, y1: hub.ypos,
   		x2: hub.xpos, y2: hub.ypos,
   		click: game.clickArrow1(hub)
@@ -336,8 +342,8 @@ game.initializePrimaryHub = function(xcoord, ycoord, clr, sClr, num){
   		strokeWidth: game.specs.minConnectWidth,
   		visible: false,
   		rounded: true,
-  		startArrow: false,
-  		arrowRadius: 1,
+  		endArrow: true,
+  		arrowRadius: 0,
   		x1: hub.xpos, y1: hub.ypos,
   		x2: hub.xpos, y2: hub.ypos,
   		click: game.clickArrow2(hub)
@@ -817,7 +823,7 @@ game.initialize = function(){
 		fontFamily: 'Arial',
 		text: "Pause",
 		click: function(layer){
-			if (!game.gameOver) {
+			if (!game.gameOver && !game.isChoosing && !game.spawning) {
 				game.paused = !game.paused;
 				var pTxt = "Pause";
 				var filStyle = game.colors.primaryRed;
@@ -957,7 +963,19 @@ game.drawHub = function(hub){
 			y2: hub.connection.ypos,
 			strokeWidth: Math.max(game.specs.minConnectWidth, 
 				(hub.units/hub.capacity)*game.specs.connectWidth),
-			strokeStyle: hub.colour
+			strokeStyle: hub.colour,
+			arrowRadius: 0
+		});
+	} else if (hub.selected && !hub.connected) {
+		$('canvas').mousemove(function(event){
+			if (!game.isChoosing && !game.spawning && !game.gameOver && !game.paused) {
+				$('canvas').setLayer(hub.arrowLayer, {
+					visible: true,
+					x2: event.pageX-game.specs.arrowXDis, y2: event.pageY-game.specs.arrowYDis,
+					strokeStyle: hub.colour,
+					arrowRadius: 10
+				}).moveLayer(hub.arrowLayer, layerCount -3);
+			}
 		});
 	} else {
 		$('canvas').setLayer(hub.arrowLayer, {
@@ -977,7 +995,19 @@ game.drawPrimaryHubs = function(){
 				x2: hub.connection2.xpos,
 				y2: hub.connection2.ypos,
 				strokeWidth: Math.max(game.specs.minConnectWidth, 
-					(hub.units/hub.capacity)*game.specs.connectWidth)
+					(hub.units/hub.capacity)*game.specs.connectWidth),
+				arrowRadius: 0
+			});
+		} else if (hub.selected && hub.connected && !hub.connected2) {
+			$('canvas').mousemove(function(event){
+				if (!game.isChoosing && !game.spawning && !game.gameOver && !game.paused) {
+					$('canvas').setLayer(hub.arrowLayer+"2", {
+						visible: true,
+						x2: event.pageX-game.specs.arrowXDis, y2: event.pageY-game.specs.arrowYDis,
+						strokeStyle: hub.colour,
+						arrowRadius: 10
+					}).moveLayer(hub.arrowLayer+"2", layerCount -3);
+				}
 			});
 		} else {
 			$('canvas').setLayer(hub.arrowLayer+"2", {
@@ -1024,7 +1054,11 @@ game.drawSecondaryHubs = function(){
 		.setLayer(hub.fillLayer, {
 			fillStyle: hub.colouring
 		});
-
+		if (hub.units == 0) {
+			$('canvas').setLayer(hub.arrowLayer, {
+				visible: false
+			});
+		}
 	});
 };
 
@@ -1051,7 +1085,7 @@ game.drawTerminals = function(){
 };
 
 game.drawHubs = function(){
-	if (!this.gameOver && !this.paused && !this.isChoosing) {
+	if (!this.gameOver && !this.paused) {
 		this.drawPrimaryHubs();
 		this.drawSecondaryHubs();
 		this.drawTerminals();
