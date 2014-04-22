@@ -65,6 +65,7 @@ game.displayCounts = false;
 game.clickableArrows = false;
 game.outlineSecondary = true;
 game.rotateOutline = true;
+game.tutorialOn = true;
 
 ///// Click Functionality /////
 
@@ -72,6 +73,10 @@ game.clickPrimHub = function(hub){
 	return function(layer) {
 		if (!game.gameOver && !game.paused && !game.isChoosing && !game.spawning) {
 			var hubSelected = hub.selected;
+			if (game.firstSelected && (hub == game.secondPrimary)) {
+				game.secondSelected = true;
+			}
+			game.firstSelected = true;
 			$.each(game.primaryHubs, function(idx, pHub){
 				pHub.selected = false;
 				pHub.colouring = pHub.colour;
@@ -82,6 +87,7 @@ game.clickPrimHub = function(hub){
 			} else {
 				if (hub.connected) {
 					hub.connected = false;
+					game.firstDisconnected = true;
 					if (hub.connection.primOneConnection == hub) {
 						hub.connection.primOneConnection = null;
 						hub.connection.primOneConnected = false;
@@ -135,6 +141,7 @@ game.clickSecHub = function(hub){
 							isPrimSelected = true;
 							hub.colour = game.calcSecondaryColor(hub);
 							hub.colouring = game.calcSecondaryColor(hub);
+							game.firstConnected = true;
 						} else if (!hub.pTwoFull && ((pHub.colour == hub.primTwo) ||
 							(hub.primTwo == game.colors.secondaryDefault)) && 
 							!hub.primTwoConnected && (pHub.colour != hub.primOne)) {
@@ -149,6 +156,7 @@ game.clickSecHub = function(hub){
 							isPrimSelected = true;
 							hub.colour = game.calcSecondaryColor(hub);
 							hub.colouring = game.calcSecondaryColor(hub);
+							game.firstConnected = true;
 						}
 					} else if (pHub.connected && !pHub.connected2 && pHub.selected && !hub.isFull && (pHub.connection != hub )) {
 						if (!hub.pOneFull && ((pHub.colour == hub.primOne) ||
@@ -165,6 +173,7 @@ game.clickSecHub = function(hub){
 							isPrimSelected = true;
 							hub.colour = game.calcSecondaryColor(hub);
 							hub.colouring = game.calcSecondaryColor(hub);
+							game.doubleConnected = true;
 						} else if (!hub.pTwoFull && ((pHub.colour == hub.primTwo) ||
 							(hub.primTwo == game.colors.secondaryDefault)) && 
 							!hub.primTwoConnected && (pHub.colour != hub.primOne)) {
@@ -179,11 +188,13 @@ game.clickSecHub = function(hub){
 							isPrimSelected = true;
 							hub.colour = game.calcSecondaryColor(hub);
 							hub.colouring = game.calcSecondaryColor(hub);
+							game.doubleConnected = true;
 						}
 					}
 				});
 				if (!isPrimSelected) {
 					hub.colouring = game.secondarySelectColor(hub);
+					game.mixerSelected = true;
 				}
 			} else {
 				if (hub.connected) {
@@ -210,6 +221,12 @@ game.clickTermHub = function(hub){
 						sHub.connection = hub;
 						sHub.selected = false;
 						sHub.colouring = sHub.colour;
+						game.terminalConnected = true;
+						if (hub == game.secondTerminal) {
+							game.terminal2Connected = true;
+							$('canvas').removeLayer("secondTerminal1Text")
+							.removeLayer("firstTerminal2Text");
+						}
 					}
 				}
 			});
@@ -274,6 +291,7 @@ game.clickMixUpgrade = function(){
 game.clickSpawn = function(clr){
 	return function(layer){
 		game.spawning = false;
+		game.spawnPrim3 = true;
 		$('canvas').removeLayer(layer);
 		var xIdx = game.xSpawns.indexOf(layer.x);
 		var yIdx = game.ySpawns.indexOf(layer.y);
@@ -625,11 +643,12 @@ game.initializeTerminalHub = function(xcoord, ycoord, clr, sClr, num){
 	hub.fillLayer = clr+"TFill"+num.toString();
 	hub.countLayer = clr+"TCount"+num.toString();
 	hub.warnLayer = clr+"TWarn"+num.toString();
+	hub.outlineLayer = clr+"TOutline"+num.toString();
 	hub.isLow = false;
 	hub.warnOpacity = 0;
 	hub.warnUp = true;
 	$('canvas').drawArc({
-		layer: true,
+		layer: true, name: hub.outlineLayer,
 		strokeStyle: hub.colour,
   		strokeWidth: game.specs.hubOutline,
   		x: hub.xpos, y: hub.ypos,
@@ -677,6 +696,23 @@ game.initializeTerminalHub = function(xcoord, ycoord, clr, sClr, num){
 	});
 	return hub;
 };
+
+game.removeTerminal = function(hub){
+	$('canvas').removeLayer(hub.outlineLayer)
+	.removeLayer(hub.outlineLayer)
+	.removeLayer(hub.clickLayer)
+	.removeLayer(hub.warnLayer)
+	.removeLayer(hub.fillLayer)
+	.removeLayer(hub.countLayer);
+	if (hub.colour == game.colors.secondaryPurple) {
+		this.purpleTerms -= 1;
+	} else if (hub.colour == game.colors.secondaryGreen) {
+		this.greenTerms -= 1;
+	} else {
+		this.orangeTerms -= 1;
+	}
+	this.terminalHubs.splice(this.terminalHubs.indexOf(hub), 1);
+}
 
 game.addPurpleTerm = function(xcoord, ycoord){
 	this.purpleTerms += 1;
@@ -774,6 +810,242 @@ game.initializeHubs = function(){
 	$('canvas').removeLayer(xTerm.toString()+","+yTerm.toString());
 };
 
+game.randomIntFromInterval = function(min,max){
+    return Math.floor(Math.random()*(max-min+1)+min);
+};
+
+game.initializeTutorial = function(){
+	this.firstSelected = false;
+	this.firstConnected = false;
+	this.firstDisconnected = false;
+	this.secondSelected = false;
+	this.secondConnected = false;
+	this.mixerSelected = false;
+	this.terminalConnected = false;
+	this.doubleConnected = false;
+	this.terminal2Connected = false;
+	this.spawnPrimary2 = false;
+	this.spawnTerm = false;
+	this.spawnMixer2 = false;
+	this.spawnTerm2 = false;
+	this.spawnPrim3 = false;
+	var xPrim1 = 5, yPrim1 = 2,
+	xPrim2 = 9, yPrim2 = 2,
+	xSec1 = 7, ySec1 = 4,
+	xSec2 = 11, ySec2 = 4,
+	xTerm1 = 7, yTerm1 = 6,
+	xTerm2 = 11, yTerm2 = 6;
+	var pIdx = this.randomIntFromInterval(0,5);
+	if (pIdx == 0) {
+		this.addRedHub(this.xSpawns[xPrim1], this.ySpawns[yPrim1]);
+		this.addBlueHub(this.xSpawns[xPrim2], this.ySpawns[yPrim2]);
+		this.addPurpleTerm(this.xSpawns[xTerm1], this.ySpawns[yTerm1]);
+		this.addGreenTerm(this.xSpawns[xTerm2], this.ySpawns[yTerm2]);
+		this.term2Color = "Green";
+	} else if (pIdx == 1) {
+		this.addBlueHub(this.xSpawns[xPrim1], this.ySpawns[yPrim1]);
+		this.addRedHub(this.xSpawns[xPrim2], this.ySpawns[yPrim2]);
+		this.addPurpleTerm(this.xSpawns[xTerm1], this.ySpawns[yTerm1]);
+		this.addOrangeTerm(this.xSpawns[xTerm2], this.ySpawns[yTerm2]);
+		this.term2Color = "Orange";
+	} else if (pIdx == 2) {
+		this.addYellowHub(this.xSpawns[xPrim1], this.ySpawns[yPrim1]);
+		this.addRedHub(this.xSpawns[xPrim2], this.ySpawns[yPrim2]);
+		this.addOrangeTerm(this.xSpawns[xTerm1], this.ySpawns[yTerm1]);
+		this.addPurpleTerm(this.xSpawns[xTerm2], this.ySpawns[yTerm2]);
+		this.term2Color = "Purple";
+	} else if (pIdx == 3) {
+		this.addRedHub(this.xSpawns[xPrim1], this.ySpawns[yPrim1]);
+		this.addYellowHub(this.xSpawns[xPrim2], this.ySpawns[yPrim2]);
+		this.addOrangeTerm(this.xSpawns[xTerm1], this.ySpawns[yTerm1]);
+		this.addGreenTerm(this.xSpawns[xTerm2], this.ySpawns[yTerm2]);
+		this.term2Color = "Green";
+	} else if (pIdx == 4) {
+		this.addYellowHub(this.xSpawns[xPrim1], this.ySpawns[yPrim1]);
+		this.addBlueHub(this.xSpawns[xPrim2], this.ySpawns[yPrim2]);
+		this.addGreenTerm(this.xSpawns[xTerm1], this.ySpawns[yTerm1]);
+		this.addPurpleTerm(this.xSpawns[xTerm2], this.ySpawns[yTerm2]);
+		this.term2Color = "Purple";
+	} else {
+		this.addBlueHub(this.xSpawns[xPrim1], this.ySpawns[yPrim1]);
+		this.addYellowHub(this.xSpawns[xPrim2], this.ySpawns[yPrim2]);
+		this.addGreenTerm(this.xSpawns[xTerm1], this.ySpawns[yTerm1]);
+		this.addOrangeTerm(this.xSpawns[xTerm2], this.ySpawns[yTerm2]);
+		this.term2Color = "Orange";
+	}
+	this.addSecondaryHub(this.xSpawns[xSec1], this.ySpawns[ySec1]);
+	this.addSecondaryHub(this.xSpawns[xSec2], this.ySpawns[ySec2]);
+	this.isSpawned[xTerm1.toString()+","+yTerm1.toString()] = true;
+	this.isSpawned[xTerm2.toString()+","+yTerm2.toString()] = true;
+	this.isSpawned[xSec1.toString()+","+ySec1.toString()] = true;
+	this.isSpawned[xSec2.toString()+","+ySec2.toString()] = true;
+	this.isSpawned[xPrim1.toString()+","+yPrim1.toString()] = true;
+	this.isSpawned[xPrim2.toString()+","+yPrim2.toString()] = true;
+	this.firstPrimary = this.primaryHubs[0];
+	this.secondPrimary = this.primaryHubs[1];
+	this.firstPrimary.units = this.firstPrimary.capacity;
+	this.firstMixer = this.secondaryHubs[0];
+	this.secondMixer = this.secondaryHubs[1];
+	this.firstTerminal = this.terminalHubs[0];
+	this.secondTerminal = this.terminalHubs[1];
+	this.primaryHubs = [];
+	this.terminalHubs = [];
+	this.secondaryHubs = [];
+	this.primaryHubs.push(this.firstPrimary);
+	this.secondaryHubs.push(this.firstMixer);
+	$('canvas').removeLayer(xSec1.toString()+","+ySec1.toString())
+	.removeLayer(xSec2.toString()+","+ySec2.toString())
+	.removeLayer(xPrim1.toString()+","+yPrim1.toString())
+	.removeLayer(xPrim2.toString()+","+yPrim2.toString())
+	.removeLayer(xTerm1.toString()+","+yTerm1.toString())
+	.removeLayer(xTerm2.toString()+","+yTerm2.toString())
+	.setLayer(this.secondMixer.clickLayer, {
+		visible: false
+	})
+	.drawText({
+		layer: true,
+		name: "firstPrimary1Text",
+		fillStyle: 'black',
+		x: this.firstPrimary.xpos, y: this.firstPrimary.ypos+this.firstPrimary.radius+10,
+		fontSize: 11,
+		fontFamily: 'Arial',
+		text: "Select a primary color by clicking it"
+	})
+	.drawText({
+		layer: true,
+		name: "secondPrimary1Text",
+		visible: false,
+		fillStyle: 'black',
+		x: this.firstPrimary.xpos, y: this.firstPrimary.ypos-this.firstPrimary.radius-10,
+		fontSize: 11,
+		fontFamily: 'Arial',
+		text: "Stop filling a primary color by double-clicking it"
+	})
+	.drawText({
+		layer: true,
+		name: "firstSecondary1Text",
+		visible: false,
+		fillStyle: 'black',
+		x: this.firstMixer.xpos, y: this.firstMixer.ypos+this.firstPrimary.radius+10,
+		fontSize: 11,
+		fontFamily: 'Arial',
+		text: "Fill a mixing bucket by clicking it"
+	})
+	.drawText({
+		layer: true,
+		name: "firstPrimary2Text",
+		fillStyle: this.secondPrimary.colour,
+		visible: false,
+		fillStyle: 'black',
+		x: this.secondPrimary.xpos, y: this.secondPrimary.ypos+this.secondPrimary.radius+10,
+		fontSize: 11,
+		fontFamily: 'Arial',
+		text: "Select another primary color by clicking it"
+	})
+	.drawText({
+		layer: true,
+		name: "secondSecondary1Text",
+		visible: false,
+		fillStyle: 'black',
+		x: this.firstMixer.xpos, y: this.firstMixer.ypos+this.firstPrimary.radius+10,
+		fontSize: 11,
+		fontFamily: 'Arial',
+		text: "Mix the colors together by clicking here"
+	})
+	.drawText({
+		layer: true,
+		name: "thirdSecondary1Text",
+		visible: false,
+		fillStyle: 'black',
+		x: this.firstMixer.xpos, y: this.firstMixer.ypos+this.firstPrimary.radius+10,
+		fontSize: 11,
+		fontFamily: 'Arial',
+		text: "Select the new secondary color by clicking it"
+	})
+	.drawText({
+		layer: true,
+		name: "firstTerminal1Text",
+		visible: false,
+		fillStyle: 'black',
+		x: this.firstTerminal.xpos, y: this.firstTerminal.ypos+this.firstTerminal.radius+10,
+		fontSize: 11,
+		fontFamily: 'Arial',
+		text: "Fill the depleting secondary color by clicking it"
+	})
+	.drawText({
+		layer: true,
+		name: "secondTerminal1Text",
+		visible: false,
+		fillStyle: 'black',
+		x: this.firstTerminal.xpos, y: this.firstTerminal.ypos+this.firstTerminal.radius+10,
+		fontSize: 11,
+		fontFamily: 'Arial',
+		text: "Don't let the secondary color bucket empty"
+	})
+	.drawText({
+		layer: true,
+		name: "fourthSecondary1Text",
+		visible: false,
+		fillStyle: 'black',
+		x: this.firstMixer.xpos, y: this.firstMixer.ypos+this.firstMixer.radius+10,
+		fontSize: 11,
+		fontFamily: 'Arial',
+		text: "Mix a primary color here"
+	})
+	.drawText({
+		layer: true,
+		name: "firstSecondary2Text",
+		visible: false,
+		fillStyle: 'black',
+		x: this.secondMixer.xpos, y: this.secondMixer.ypos+this.secondMixer.radius+10,
+		fontSize: 11,
+		fontFamily: 'Arial',
+		text: "Mix the same primary color here"
+	})
+	.drawText({
+		layer: true,
+		name: "secondPrimary2Text",
+		visible: false,
+		fillStyle: 'black',
+		x: this.secondPrimary.xpos, y: this.secondPrimary.ypos-this.secondPrimary.radius-10,
+		fontSize: 11,
+		fontFamily: 'Arial',
+		text: "Primary colors can mix into 2 buckets at one time"
+	})
+	.drawText({
+		layer: true,
+		name: "firstTerminal2Text",
+		visible: false,
+		fillStyle: 'black',
+		x: this.secondTerminal.xpos, y: this.secondTerminal.ypos+this.secondTerminal.radius+10,
+		fontSize: 11,
+		fontFamily: 'Arial',
+		text: "Don't let the secondary color bucket empty"
+	})
+	.drawText({
+		layer: true,
+		name: "upgradeChoiceText",
+		visible: false,
+		fillStyle: 'black',
+		strokeStyle: 'black',
+		strokeWidth: 1,
+		x: 575, y: 285,
+		fontSize: 16,
+		fontFamily: 'Arial',
+		text: "Choose the correct primary color to mix " + this.term2Color
+	})
+	.drawText({
+		layer: true,
+		name: "upgradeSpawnText",
+		visible: false,
+		fillStyle: 'black',
+		x: this.xSpawns[13], y: this.ySpawns[yPrim1]-this.firstPrimary.radius-7,
+		fontSize: 12,
+		fontFamily: 'Arial',
+		text: "Click a white circle to place the color bucket"
+	});
+};
+
 game.initialize = function(){
 	$('canvas').removeLayers().clearCanvas();
 	this.drawPending = false;
@@ -799,7 +1071,16 @@ game.initialize = function(){
 	this.spawning = false;
 	this.chosenUpgrade = this.colors.secondaryDefault;
 	this.initSpawnLocs();
-	this.initializeHubs();
+	var tutTxt = "Tutorial: ";
+	if (game.tutorialOn) {
+		this.initializeTutorial();
+		this.currTutorial = true;
+		tutTxt += "ON";
+	} else {
+		this.initializeHubs();
+		this.currTutorial = false;
+		tutTxt += "OFF";
+	}
 	$('canvas').drawRect({
 		layer: true,
 		visible: false,
@@ -841,9 +1122,34 @@ game.initialize = function(){
 					pTxt = "Play";
 					filStyle = game.colors.secondaryGreen;
 				}
-				$('canvas').setLayer("pauseText", {
+				$('canvas').setLayer(layer, {
 					text: pTxt,
 					fillStyle: filStyle
+				});
+			}
+		}
+	})
+	.drawText({
+		layer: true,
+		name: "tutorialText",
+		fillStyle: 'rgb(201,66,145)',
+		strokeStyle: 'black',
+		strokeWidth: 1,
+		x: 60, y: 10,
+		fontSize: 20,
+		fontFamily: 'Arial',
+		text: tutTxt,
+		click: function(layer){
+			if (!game.gameOver && !game.isChoosing && !game.spawning) {
+				game.tutorialOn = !game.tutorialOn;
+				var tTxt = "Tutorial: ";
+				if (game.tutorialOn) {
+					tTxt +="ON";
+				} else {
+					tTxt += "OFF";
+				}
+				$('canvas').setLayer(layer, {
+					text: tTxt
 				});
 			}
 		}
@@ -947,6 +1253,7 @@ game.initialize = function(){
   		fillStyle: game.colors.primaryYellow,
   		start: 60, end: 180
 	});
+	this.moveMouse();
 };
 
 ///// Drawing /////
@@ -1133,11 +1440,98 @@ game.drawSpawnLocs = function(){
 	}
 };
 
+game.drawTutorial = function(){
+	if (!this.gameOver && !this.paused) {
+		if (this.currTutorial) {
+			if (this.firstSelected) {
+				$('canvas').removeLayer("firstPrimary1Text")
+				.setLayer("firstSecondary1Text", {
+					visible: true
+				});
+			}
+			if (this.firstConnected) {
+				$('canvas').removeLayer("firstSecondary1Text")
+				.setLayer("secondPrimary1Text", {
+					visible: true
+				});
+			}
+			if (this.firstDisconnected) {
+				$('canvas').removeLayer("secondPrimary1Text")
+				.setLayer("firstPrimary2Text", {
+					visible: true
+				});
+			}
+			if (this.secondSelected) {
+				$('canvas').removeLayer("firstPrimary2Text")
+				.setLayer("secondSecondary1Text", {
+					visible: true
+				});
+			}
+			if (this.secondConnected) {
+				$('canvas').removeLayer("secondSecondary1Text")
+				.setLayer("thirdSecondary1Text", {
+					visible: true
+				});
+			}
+			if (this.mixerSelected && this.secondConnected) {
+				$('canvas').removeLayer("thirdSecondary1Text")
+				.setLayer("firstTerminal1Text", {
+					visible: true
+				});
+			}
+			if (this.terminalConnected) {
+				$('canvas').removeLayer("firstTerminal1Text")
+				.setLayer(this.secondMixer.clickLayer, {
+					visible: true
+				})
+				.setLayer("fourthSecondary1Text", {
+					visible: true
+				})
+				.setLayer("firstSecondary2Text", {
+					visible: true
+				})
+				.setLayer("secondPrimary2Text", {
+					visible: true
+				});
+			}
+			if (this.doubleConnected) {
+				$('canvas').removeLayer("fourthSecondary1Text")
+				.removeLayer("firstSecondary2Text")
+				.removeLayer("secondPrimary2Text")
+				.setLayer("secondTerminal1Text", {
+					visible: true
+				})
+				.setLayer("firstTerminal2Text", {
+					visible: true
+				});
+			}
+			if (this.isChoosing) {
+				this.doubleConnected = false;
+				var layerCount = $('canvas').getLayers().length;
+				$('canvas').setLayer("upgradeChoiceText", {
+					visible: true
+				})
+				.moveLayer("upgradeChoiceText", layerCount-1);
+			}
+			if (this.spawning) {
+				$('canvas').removeLayer("upgradeChoiceText")
+				.setLayer("upgradeSpawnText", {
+					visible: true
+				});
+			}
+			if (this.spawnPrim3) {
+				$('canvas').removeLayer("upgradeSpawnText");
+			}
+		}
+	}
+};
+
 game.draw = function(){
 	game.drawPending = false;
 	game.drawHubs();
 	game.drawChoosing();
 	game.drawSpawnLocs();
+	game.drawTutorial();
 	game.drawGameOver();
 	$('canvas').setLayer("timerText", {
 		text: "Time: "+Math.floor(game.totalTime/game.FPS).toString()
@@ -1274,6 +1668,7 @@ game.updateSecondaryHub = function(sHub){
 		sHub.isFull = true;
 	}
 	if ((sHub.pTwoCount > 0) && (sHub.pOneCount > 0)) {
+		this.secondConnected = true;
 		sHub.convertTimer -= 1;
 		if ((sHub.convertTimer < 0) && !sHub.isFull) {
 			sHub.convertTimer = this.timers.secondaryConvert;
@@ -1336,7 +1731,7 @@ game.updateSecondaryHub = function(sHub){
 };
 
 game.updateTerminalHub = function(tHub){
-	if (tHub.units == 0) {
+	if (tHub.units == 0 && !this.currTutorial) {
 		game.gameOver = true;
 		tHub.warnOpacity = 1.0;
 	}
@@ -1391,7 +1786,7 @@ game.updateHubs = function(){
 
 game.updateUpgrade = function(){
 	this.upgradeTimer -= 1;
-	if (this.upgradeTimer < 0) {
+	if (this.upgradeTimer < 0 && (this.doubleConnected || !this.currTutorial)) {
 		this.isChoosing = true;
 		this.upgradeTimer = game.timers.upgradeTimer;
 	}
@@ -1399,7 +1794,7 @@ game.updateUpgrade = function(){
 
 game.updateTerminalTimer = function(){
 	this.terminalTimer -= 1;
-	if (this.terminalTimer < 0) {
+	if (this.terminalTimer < 0 && !this.currTutorial) {
 		this.terminalTimer = game.timers.terminalTimer;
 		var xSpawn = Math.floor(Math.random()*(this.xSpawns.length)),
 		ySpawn = Math.floor(Math.random()*(this.ySpawns.length));
@@ -1422,9 +1817,47 @@ game.updateTerminalTimer = function(){
 	}
 };
 
+game.updateTutorial = function(){
+	if (this.currTutorial) {
+		this.totalTime -= 1;
+		if (this.firstDisconnected && !this.spawnPrimary2) {
+			this.secondPrimary.units = this.secondPrimary.capacity;
+			this.primaryHubs.push(this.secondPrimary);
+			this.spawnPrimary2 = true;
+			this.moveMouse();
+		}
+		if (this.secondConnected && !this.spawnTerm) {
+			this.firstTerminal.units = this.firstTerminal.capacity-1;
+			this.terminalHubs.push(this.firstTerminal);
+			this.spawnTerm = true;
+		}
+		if (this.terminalConnected && !this.spawnMixer2) {
+			this.secondaryHubs.push(this.secondMixer);
+			this.spawnMixer2 = true;
+			this.firstMixer.pTwoCount = 0;
+			this.secondPrimary.connected = false;
+			this.secondPrimary.connection = null;
+			this.firstMixer.primTwoConnected = false;
+			this.firstMixer.primTwoConnection = null;
+			this.secondPrimary.units = this.secondPrimary.capacity;
+			this.moveMouse();
+		}
+		if (this.doubleConnected && !this.spawnTerm2) {
+			this.secondTerminal.units = this.secondTerminal.capacity-1;
+			this.terminalHubs.push(this.secondTerminal);
+			this.spawnTerm2 = true;
+			this.upgradeTimer = this.FPS*4;
+		}
+		if (this.terminal2Connected) {
+			this.currTutorial = false;
+		}
+	}
+};
+
 game.update = function(){
 	if (!this.gameOver && !this.paused && !this.isChoosing && !this.spawning) {
 		this.totalTime += 1;
+		this.updateTutorial();
 		this.updateHubs();
 		this.updateUpgrade();
 		this.updateTerminalTimer();
@@ -1448,6 +1881,32 @@ game.run = (function(){
 		if (loops) game.requestRedraw();
 	};
 })();
+
+game.mainloop = function(){
+	this.update();
+	this.draw();
+};
+
+game.run2 = function(){
+	var animFrame = window.requestAnimationFrame ||
+			window.webkitRequestAnimationFrame ||
+			window.mozRequestAnimationFrame    ||
+			window.oRequestAnimationFrame      ||
+			window.msRequestAnimationFrame     ||
+			null;
+	if (animFrame !== null) {
+		console.log("hi");
+		var canvas = $('canvas').get(0);
+		var recursiveAnim = function() {
+			game.mainloop();
+			animFrame(recursiveAnim, canvas);
+        };
+        animFrame(recursiveAnim, canvas);
+    } else {
+        var ONE_FRAME_TIME = 1000.0 / game.FPS;
+        setInterval(this.mainloop, ONE_FRAME_TIME);
+    }
+};
 
 
 ///// User Input /////
@@ -1497,11 +1956,16 @@ game.userInput = function(){
 	$(window).keypress(function(e) {
 		var key = e.which;
 		if (key == 32) {
+			$.each(game.primaryHubs, function(idx, hub){
+				hub.selected = false;
+			});
+			$.each(game.secondaryHubs, function(idx, hub){
+				hub.selected = false;
+			});
 			game.initialize()
-			game.moveMouse();
+			//game.run2();
 		}
 	});
-	this.moveMouse();
 };
 
 ///// Game Launch /////
@@ -1509,6 +1973,7 @@ game.userInput = function(){
 game.startGame = function(){
 	this.initialize();
 	this.userInput();
+	//this.run2();
 	this._intervalID = setInterval(this.run, 0);
 };
 
