@@ -39,7 +39,7 @@ game.specs = {
 	maxWarnOpac: 0.5,
 	warnOpacStep: 0.0175,
 	arrowXDis: 65,
-	arrowYDis: 25
+	arrowYDis: 148
 };
 
 game.colors = {
