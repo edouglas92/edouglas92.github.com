@@ -15,26 +15,23 @@ body {
     background-color: #FFE4E1;
 }
 
-a:link { 
-	COLOR: #0000FF; 
-} 
-a:visited { 
-	COLOR: #800080; 
-} 
-a:hover { 
-	COLOR: #FF0000; 
-} 
-a:active { 
-	COLOR: #00FF00; 
-} 
-
-.link {
-	display:block;
-	text-align:center;
+#instructions, #title {
+	width: 1160px;
+	display: block;
+  	margin-left: auto;
+ 	margin-right: auto;
 }
 
-p {
-    color: rgba(0,0,0,0.6);
-    text-shadow: 2px 2px 3px rgba(255,255,255,0.1);
-    font-family: "Big Caslon", "Book Antiqua", "Palatino Linotype", Georgia, serif;
+ul {
+	font-size: larger;
+}
+
+#game-title {
+	font-size: 70px;
+	font-family: 'Bowlby One SC', 'cursive';
+	color: #000066;
+}
+
+h5 {
+	padding-left: 10px;
 }
